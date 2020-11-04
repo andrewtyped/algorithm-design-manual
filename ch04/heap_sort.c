@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #define PQ_SIZE 100
 
@@ -36,6 +37,24 @@ void pq_swap(priority_queue *q, int childP, int parentP) {
     q->q[childP] = temp;
 }
 
+void bubble_down(priority_queue *q, int p) {
+    int min_index = p;
+    int c = pq_young_child(p);
+
+    for(int i = 0; i <= 1; i++) {
+        if((c + i) <= q->n) {
+            if(q->q[min_index] > q->q[c+i]) {
+                min_index = c+i;
+            }
+        }
+    }
+
+    if(min_index != p) {
+        pq_swap(q,min_index,p);
+        bubble_down(q,min_index);
+    }
+}
+
 void bubble_up(priority_queue *q, int p) {
     int parentP = pq_parent(p);
 
@@ -68,9 +87,21 @@ void pq_init(priority_queue *q) {
 void make_heap(priority_queue *q, item_type s[], int n) {
     int i;
 
+    /* Original implementation
     pq_init(q);
     for (i=0; i < n; i++) {
         pq_insert(q, s[i]);
+    }
+    */
+
+    //Linear time construction
+    q->n = n;
+    for(int i = 0; i < n; i++) {
+        q->q[i+1] = s[i];
+    }
+
+    for(int i = n/2; i >= 1; i--) {
+        bubble_down(q,i);
     }
 }
 
@@ -80,6 +111,22 @@ void print_heap(priority_queue *q) {
     }
 }
 
+item_type extract_min(priority_queue *q) {
+    int min = -1;
+
+    if(q->n == 0) {
+        printf("Warning: empty queue.\n");
+    }
+    else {
+        min = q->q[1];
+        q->q[1] = q->q[q->n];
+        q->n = q->n - 1;
+        bubble_down(q,1);
+    }
+
+    return(min);
+}
+
 int main() {
     priority_queue *q = malloc(sizeof *q);
 
@@ -87,6 +134,16 @@ int main() {
 
     make_heap(q,s,10);
     print_heap(q);
+
+    printf("Printing sorted heap:\n");
+
+    int min = INT_MAX;
+
+    while(min != -1) {
+        min = extract_min(q);
+        printf("%d\n",min);
+    }
+
     return 0;
 }
 
